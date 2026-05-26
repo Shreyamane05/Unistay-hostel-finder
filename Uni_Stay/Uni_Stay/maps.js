@@ -30,32 +30,44 @@ async function addHostelMarkers(hostels) {
     
     for (const hostel of hostels) {
         try {
-            // Geocoding using Nominatim
-            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(hostel.address + ', India')}`);
-            const data = await response.json();
-            
-            if (data && data.length > 0) {
-                const lat = parseFloat(data[0].lat);
-                const lon = parseFloat(data[0].lon);
+            let lat = null;
+            let lon = null;
+
+            // Direct Coordinate Check (Preloaded coordinates from seed/DB)
+            if (hostel.lat && (hostel.lng || hostel.lon)) {
+                lat = parseFloat(hostel.lat);
+                lon = parseFloat(hostel.lng || hostel.lon);
+            } 
+            // Geocoding Fallback Engine (Nominatim)
+            else {
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(hostel.address + ', India')}`);
+                const data = await response.json();
                 
+                if (data && data.length > 0) {
+                    lat = parseFloat(data[0].lat);
+                    lon = parseFloat(data[0].lon);
+                    
+                    // Respect Nominatim rate limit only when geocoding dynamically
+                    if (hostels.length > 1) {
+                        await sleep(1000); 
+                    }
+                }
+            }
+            
+            if (lat && lon) {
                 const marker = L.marker([lat, lon]).addTo(map);
                 
                 const popupContent = `
                     <div style="padding: 5px;">
                         <h4 style="margin: 0 0 5px 0;">${hostel.hostel_name || hostel.name}</h4>
-                        <p style="margin: 0 0 5px 0; font-size: 0.85rem;">${hostel.address || hostel.location}</p>
-                        <p style="margin: 0; font-weight: bold; color: #4f46e5;">${hostel.monthly_rent || hostel.price}</p>
+                        <p style="margin: 0 0 5px 0; font-size: 0.85rem;">📍 ${hostel.address || hostel.location}</p>
+                        <p style="margin: 0; font-weight: bold; color: var(--primary, #7c3aed);">${hostel.monthly_rent || hostel.price}</p>
                     </div>
                 `;
                 
                 marker.bindPopup(popupContent);
                 markers.push(marker);
                 bounds.push([lat, lon]);
-            }
-            
-            // Respect Nominatim rate limit (1 req/sec)
-            if (hostels.length > 1) {
-                await sleep(1000); 
             }
         } catch (error) {
             console.error("Geocoding failed for", hostel.hostel_name, error);

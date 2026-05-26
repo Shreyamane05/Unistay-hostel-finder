@@ -9,7 +9,6 @@
 </head>
 <body>
 
-    <!-- Navigation -->
     <nav class="navbar glass">
         <div class="container">
             <a href="index.html" class="navbar-brand">
@@ -19,7 +18,6 @@
         </div>
     </nav>
 
-    <!-- Hero Section -->
     <section class="hero">
         <div class="blob blob-1"></div>
         <div class="blob blob-2"></div>
@@ -68,6 +66,43 @@
             </div>
         </div>
     </section>
+
+    <script>
+        let currentRole = 'student';
+
+        function toggleRole(role) {
+            currentRole = role;
+            const buttons = document.querySelectorAll('.role-toggle .role-btn');
+            buttons.forEach(btn => {
+                if (btn.getAttribute('data-role') === role) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const userVal = document.getElementById('username').value.trim();
+            const passVal = document.getElementById('password').value;
+
+            if (currentRole === 'student') {
+                if (userVal === 'student' && passVal === '123') {
+                    window.location.href = 'student-dashboard.html';
+                } else {
+                    alert('Invalid Student Credentials!');
+                }
+            } else if (currentRole === 'owner') {
+                if (userVal === 'owner' && passVal === '123') {
+                    window.location.href = 'owner-dashboard.html';
+                } else {
+                    alert('Invalid Owner Credentials!');
+                }
+            }
+        });
+    </script>
 
     <script src="app.js"></script>
 </body>
